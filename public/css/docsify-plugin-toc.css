@@ -1,0 +1,158 @@
+@media only screen and (max-width: 1299px) {
+  aside.toc-nav {
+    max-width: 45px;
+    opacity: 0.6;
+    right: 0 !important;
+    margin-right: 0 !important;
+    background: #fff;
+  }
+  aside.toc-nav:hover {
+    max-width: inherit;
+    opacity: 1;
+  }
+}
+
+@media only screen and (min-width: 1300px) {
+  section.content {
+    padding-right: 250px;
+  }
+}
+
+aside.toc-nav {
+  position: fixed;
+  top: 70px;
+  right: 3%;
+  margin-right: 20px;
+  width: 250px;
+  z-index: 999999;
+  align-self: flex-start;
+  flex: 0 0 auto;
+  overflow-y: auto;
+  max-height: 80%;
+}
+
+aside.toc-nav.nothing {
+  width: 0;
+}
+
+.page_toc {
+  position: relative;
+  left: 0;
+  margin: 10px 0;
+  border: none;
+  font-size: 1em;
+}
+
+/* 滚动条宽度 */
+aside::-webkit-scrollbar {
+  width: 7px;
+}
+/* 滚动条大盒子 */
+aside::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+  border-radius: 5px;
+}
+/* 滚动条小滑块 */
+aside::-webkit-scrollbar-thumb {
+  background-color: #dddddd;
+  border-radius: 5px;
+}
+aside::-webkit-scrollbar-thumb:hover {
+  background-color: #bbbbbb;
+}
+
+/* 目录标题左边距 */
+.page_toc span {
+  padding-left: 5px;
+}
+
+.page_toc p.title {
+  margin: 0;
+  padding-bottom: 5px;
+  font-weight: 600;
+  font-size: 1.2em;
+}
+
+.page_toc .anchor:hover:after {
+  content: '';
+}
+
+.page_toc div[class^='lv'] a:hover span {
+  color: var(--sidebar-nav-link-color--active, #42b983);
+}
+
+.page_toc div {
+  border-left: 2px solid #e8e8e8;
+  text-indent: 10px;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+/* 左侧当前进度样式 */
+.page_toc div.active {
+  border-left-color: var(--sidebar-nav-link-color--active, #42b983);
+  transition: border-left-color 0.23s;
+}
+
+/* 页面滚动到的标签的目录样式 */
+.page_toc div.active a span {
+  color: var(--sidebar-nav-link-color--active, #42b983) !important;
+  transition: color 0.23s;
+}
+
+.page_toc div[class^='lv'] a {
+  text-decoration: none;
+  font-weight: 300;
+  line-height: 2em;
+  display: block;
+  color: #505d6b;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.page_toc div[class^='lv'] a span {
+  font-weight: 500;
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 2级标题左空位 */
+.page_toc div.lv2 {
+  text-indent: 30px;
+}
+
+.page_toc div.lv2 span {
+  color: #505d6b !important;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.page_toc div.lv2 span:hover {
+  text-decoration: underline;
+}
+
+.page_toc div.lv3 {
+  text-indent: 50px;
+}
+.page_toc div.lv3 span {
+  font-size: 10px !important;
+  line-height: 16px;
+}
+.page_toc div.lv3 span:hover {
+  text-decoration: underline;
+  color: #505d6b !important;
+}
+
+.page_toc div.lv4 {
+  text-indent: 40px;
+}
+
+.page_toc div.lv5 {
+  text-indent: 50px;
+}
+
+.page_toc div.lv6 {
+  text-indent: 60px;
+}

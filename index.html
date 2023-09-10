@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>YRCX的博客</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="description" content="Description" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
+    />
+    <link rel="icon" href="./icon/icon.png" type="image/x-icon" />
+    <link rel="shortcut icon" href="./icon/icon.png" type="image/x-icon" />
+    <link rel="stylesheet" href="./public/css/vue.css" />
+    <!-- 目录插件 -->
+    <link rel="stylesheet" href="./public/css/docsify-plugin-toc.css" />
+    <style>
+      .folder:hover {
+        cursor: pointer;
+      }
+      .docsify-copy-code-button {
+        border-radius: 2px !important;
+      }
+      .sidebar li > p {
+        font-weight: 500;
+      }
+    </style>
+  </head>
+
+  <body>
+    <nav>
+      <a href="#/README.md">首页</a>
+      <a href="http://blog.yrkj.ink/">博客</a>
+      <a href="#/more/aboutme.md">关于本站</a>
+    </nav>
+    <div id="app">加载中</div>
+
+    <script>
+      window.$docsify = {
+        loadSidebar: true,
+        subMaxLevel: 0,
+        search: 'auto',
+        name: '<span>🌈 极光的文档</span>',
+        // coverpage: true,
+        toc: {
+          tocMaxLevel: 3,
+          target: 'h1,h2, h3',
+          ignoreHeader: [
+            '<!-- {docsify-ignore} -->',
+            '<!-- {docsify-ignore-all} -->',
+          ],
+        },
+        // 完整配置参数
+        search: {
+          maxAge: 86400000, //过期时间,单位毫秒,默认一天
+          placeholder: '🔍️请输入搜索关键字',
+          noData: '没有搜到呦!',
+          depth: 6,
+        },
+
+        scrollToTop: {
+          auto: true,
+          text: 'top',
+          right: 30,
+          bottom: 30,
+          // 偏移量，触发按钮
+          offset: 500,
+        },
+
+        count: {
+          countable: true,
+          fontsize: '0.9em',
+          color: 'rgb(90,90,90)',
+          language: 'chinese',
+        },
+      }
+    </script>
+    <!-- Docsify v4 -->
+    <script src="./public/js/docsify@4.js"></script>
+    <!-- 搜索 -->
+    <script src="./public/js/search.min.js"></script>
+    <!-- 底部导航 -->
+    <script src="./public/js/docsify-pagination.min.js"></script>
+    <!-- 代码复制 -->
+    <script src="./public/js/docsify-copy-code.min.js"></script>
+    <!-- emoji -->
+    <script src="./public/js/emoji.min.js"></script>
+    <!-- 侧边栏目录折叠 -->
+    <script src="./public/js/docsify-sidebar-collapse.min.js"></script>
+    <script src="./public/js/docsify-scroll-to-top.min.js"></script>
+    <!-- 外部脚本 -->
+    <script src="./public/js/external-script.min.js"></script>
+    <!-- 目录插件 -->
+    <script src="./public/js/docsify-plugin-toc.min.js"></script>
+
+    <!-- 代码美化整合 -->
+    <script src="./public/js/prism-java.min.js"></script>
+    <script src="./public/js/prism-json.min.js"></script>
+    <script src="./public/js/prism-scss.min.js"></script>
+    <script src="./public/js/prism-typescript.min.js"></script>
+    <script src="./public/js/prism-php.min.js"></script>
+    <script src="./public/js/countable.js"></script>
+
+    <!-- Docsify v4 -->
+    <!-- <script src="//cdn.jsdelivr.net/npm/docsify@4"></script> -->
+    <!-- 搜索 -->
+    <!-- <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script> -->
+    <!-- 目录插件 -->
+    <!-- <script src="https://unpkg.com/docsify-plugin-toc@1.3.1/dist/docsify-plugin-toc.min.js"></script> -->
+    <!-- 侧边栏目录折叠 -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/docsify-sidebar-collapse.min.js"></script> -->
+    <!-- <script src="https://unpkg.com/docsify-scroll-to-top/dist/docsify-scroll-to-top.min.js"></script> -->
+    <!-- 字数统计 -->
+    <!-- <script src="//unpkg.com/docsify-count/dist/countable.js"></script> -->
+    <!-- emoji -->
+    <!-- <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/emoji.min.js"></script> -->
+    <!-- 代码复制 -->
+    <!-- <script src="//cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script> -->
+    <!-- 底部导航 -->
+    <!-- <script src="//cdn.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script> -->
+    <!-- 外部脚本 -->
+    <!-- <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/external-script.min.js"></script> -->
+
+    <!-- php美化 -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/prismjs@1.22.0/components/prism-php.min.js"></script> -->
+    <!-- ts美化 -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/prismjs@1.22.0/components/prism-typescript.min.js"></script> -->
+    <!-- scss美化 -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/prismjs@1.22.0/components/prism-scss.min.js"></script> -->
+    <!-- json美化 -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/prismjs@1.22.0/components/prism-json.min.js"></script> -->
+    <!-- java美化 -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/prismjs@1.22.0/components/prism-java.min.js"></script> -->
+    <!-- 目录插件 -->
+    <!-- <link
+      rel="stylesheet"
+      href="https://unpkg.com/docsify-plugin-toc@1.3.1/dist/light.css"
+    /> -->
+    <!-- <link
+      rel="stylesheet"
+      href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css"
+    /> -->
+  </body>
+</html>
