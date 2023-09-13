@@ -1,8 +1,8 @@
 > 创建日期：2023-7-23
 >
-> 修改日期：2023-7-25
+> 修改日期：2023-9-13
 
-#
+
 
 # 一、 项目初始化
 
@@ -1343,6 +1343,68 @@ export default router
 
 
 
+**再需要配置路由的地方如`store/user.ts`仓库中：**
+
+
+
+1. 首先先将在`src/router/routers.ts`中已分割的路由引入到仓库：
+
+```ts
+import { constantRoute, asyncRoute, anyRoute } from '@/router/routers'
+```
+
+2. 创建过滤路由的函数：
+
+```ts
+function filterAsyncRoute(asyncRoute: any, routers: any) {
+    return asyncRoute.filter((item: any) => {
+        if (routers.includes(item.name)) {
+            // routers: ['aaa', 'User', 'Category','Sku']
+            if (item.children && item.children.length > 0) {
+                item.children = filterAsyncRoute(item.children, routers)
+            }
+            return true
+        }
+    })
+}
+```
+
+3. 在仓库中声明一个存储要生成菜单的路由数组`menuRoutes`
+
+4. 在登录成功后获取用户信息时调用以上方法：传入所有的`asyncRoute`和自己的`result.routes`。避免路由出现路由登录后越来越少的情况，引入深拷贝方法调用
+
+```ts
+// 引入深拷贝方法
+import { cloneDeep } from 'lodash'
+
+// 计算当前用户的异步路由
+let userAsyncRoute = filterAsyncRoute(cloneDeep(asyncRoute),res.data.routes,)
+```
+
+5. 将所有路由解构存放数组中
+
+```ts
+this.menuRoutes = [...constantRoute,...userAsyncRoute,...anyRoute,]
+```
+
+6. 将路由追加：
+
+```ts
+this.menuRoutes.forEach((route: any) => {
+         router.addRoute(route)
+})
+```
+
+
+
+7. 此时可能出现另一个问题：登录成功后本地有用户信息，页面刷新直接next()，如果页面没有用户信息或者页面重新刷新pinia仓库数据丢失，需要重新获取用户信息，但刷新的路由是异步路由，但是还没有加载完毕，页面出现白屏，可如下配置next()
+
+```ts
+next({...to})
+```
+
+
+
 ## 3. 登录携带token的路由守卫配置
 
 处理不需要携带token的路由之外，其他的路由需要携带token才能进行下一步操作
@@ -1482,12 +1544,14 @@ export const useUserStore = defineStore('User',{
         title: '',
     }
   },
+    // 相当于methods
   actions:{
      test() {
           this.title = '标题'
           console.log(this.title)
       },
   }
+    // 相当于computed
   getters:{},
 })
 
@@ -1511,5 +1575,93 @@ UserStore.test()
 
 
 
+**state批量修改值：**
 
+```ts
+let Test = useUserStore()
+Test.$patch({
+	age:18,
+	name:'asd'
+})
+
+// 函数式写法
+Test.$patch((state)=>{
+    state.age=18
+})
+```
+
+
+
+
+
+**pinia解构响应式：**
+
+```ts
+let Test = useUserStore()
+const {age}=Test
+
+pinia提供了方法：
+import {storeToRefs} from 'pinia'
+const {age}=storeToRefs(Test)
+```
+
+
+
+
+
+**$reset**：
+重置store到他的初始状态
+
+```ts
+state: () => ({
+     user: <Result>{},
+     name: "default",
+     current:1
+}),
+```
+
+Vue 例如我把值改变到了10
+
+```ts
+const change = () => {
+     Test.current++
+}
+```
+
+调用$reset();
+
+将会把state所有值 重置回 原始状态
+
+
+**订阅state的改变：**
+
+类似于Vuex 的abscribe 只要有state 的变化就会走这个函数
+
+```typescript
+Test.$subscribe((args,state)=>{
+   console.log(args,state);
+
+})
+```
+
+如果你的组件卸载之后还想继续调用请设置第二个参数
+
+```ts
+Test.$subscribe((args,state)=>{
+   console.log(args,state);
+},{
+  detached:true
+})
+```
+
+
+
+**订阅Actions的调用：**
+ 只要有actions被调用就会走这个函数
+
+```
+Test.$onAction((args)=>{
+   console.log(args);
+})
+```
 

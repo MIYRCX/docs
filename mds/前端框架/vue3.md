@@ -1,6 +1,6 @@
 > 创建日期：2022
 >
-> 修改日期：2023-9-9
+> 修改日期：2023-9-13
 
 
 
@@ -599,6 +599,115 @@ const tab = reactive<Com[]>([{
 
 
 
+## 12. 自定义指令
+
+声明时格式为：`vMove`，调用为`v-move`。可以加参数`:aaa`，也可以加修饰符`.stop`，在dir可以看到
+
+```html
+<template>
+  <div v-move:aaa.stop="{ background: 'red' }">123</div>
+</template>
+
+<script setup lang="ts">
+import { Directive } from 'vue'
+
+const vMove: Directive = {
+    // 生命周期
+  created() {},
+  beforeMount() {},
+  mounted(el: HTMLElement, dir: any) {
+    el.style.background = dir.value.background
+  },
+  beforeUpdate() {},
+  updated() {},
+  beforeUnmount() {},
+  unmounted() {},
+}
+</script>
+
+<style lang="scss" scoped></style>
+
+```
+
+
+
+**按钮鉴权的案例1：**根据后台信息判断用户是否拥有此按钮权限
+
+```html
+<template>
+  <button v-has-show="'stop:create'">创建</button>
+  <button v-has-show="'stop:edit'">编辑</button>
+  <button v-has-show="'stop:delete'">删除</button>
+</template>
+
+<script setup lang="ts">
+import type { Directive } from 'vue'
+
+const userId = 'yr'
+// mock
+const permission = ['yr:stop:edit', 'yr:stop:create', 'yr:stop:delete']
+
+const vHasShow: Directive<HTMLElement, string> = (el, binding) => {
+  if (!permission.includes(userId + ':' + binding.value)) {
+    el.style.display = 'none'
+  }
+}
+</script>
+
+<style lang="scss" scoped></style>
+
+```
+
+
+
+**项目案例2：**
+
+用户登录后后台返回的用户数据包括的按钮权限数组如：[`btn.user.add`、`btn.goods.delete`]
+
+
+
+创建文件src/directive/has.ts
+
+```ts
+import pinia from '@/store'
+import useUserStore from '@/store/modules/user'
+let UserStore = useUserStore(pinia) // 组件之外使用需传入
+
+export const isHasButton = (app: any) => {
+    app.directive('has', {
+        // dom挂载完毕执行一次
+        mounted(el: any, options: any) {
+            if (!UserStore.buttons.includes(options.value)) {
+                // 从dom树去除
+                el.parentNode.removeChild(el)
+            }
+        },
+    })
+}
+
+```
+
+
+
+main.ts引入：
+
+```ts
+import {isHasButton} from '@/directive/has.ts'
+isHasButton(app)
+```
+
+
+
+页面使用：
+
+```html
+<button v-has="'stop:delete'">删除</button>
+```
+
+
+
+
+
 
 
 
@@ -847,16 +956,46 @@ v-model指令可是收集表单数据(数据双向绑定)，除此之外它也�
 
 下方代码:相当于给组件Child传递一个props(modelValue)与绑定一个自定义事件update:modelValue
 
-实现父子组件数据同步
+**父子组件传输：**
 
 ```vue
 <Child v-model="msg"></Child>
 ```
 
+
+
+**子组件接收：**
+
+```ts
+defineProps<{
+  modelValue:boolean
+}>()
+```
+
+
+
+**子组件控制同步：**
+
+```ts
+const emit = defineEmits(['update:modelValue'])
+// 点击事件触发
+emit('update:modelValue',false)
+```
+
+
+
 在vue3中一个组件可以通过使用多个v-model,让父子组件多个数据同步,下方代码相当于给组件Child传递两个props分别是pageNo与pageSize，以及绑定两个自定义事件update:pageNo与update:pageSize实现父子数据同步
 
 ```vue
 <Child v-model:pageNo="msg" v-model:pageSize="msg1"></Child>
+```
+
+**接收：**
+
+```ts
+defineProps<{
+  pageNo:number
+}>()
 ```
 
 
@@ -1590,6 +1729,858 @@ import 'animate.css'
 
 
 
+# 六、vue-router
+
+## 1. 基础使用
+
+```shell
+npm install vue-router@4
+```
+
+src/router/index.ts
+
+```ts
+//引入路由对象
+import { createRouter, createWebHistory, createWebHashHistory, createMemoryHistory, RouteRecordRaw } from 'vue-router'
+ 
+//vue2 mode history vue3 createWebHistory
+//vue2 mode  hash  vue3  createWebHashHistory
+//vue2 mode abstact vue3  createMemoryHistory
+ 
+//路由数组的类型 RouteRecordRaw
+// 定义一些路由
+// 每个路由都需要映射到一个组件。
+const routes: Array<RouteRecordRaw> = [{
+    path: '/',
+    component: () => import('../components/a.vue')
+},{
+    path: '/register',
+    component: () => import('../components/b.vue')
+}]
+ 
+ 
+ 
+const router = createRouter({
+    history: createWebHistory(),
+    routes
+})
+ 
+//导出router
+export default router
+```
+
+
+
+
+
+## 2. 编程式导航
+
+除了使用 `<router-link>` 创建 a 标签来定义导航链接，我们还可以借助 router 的实例方法，通过编写代码来实现。
+
+1.字符串模式
+
+```ts
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
+const toPage = () => {
+  router.push('/reg')
+}
+```
+
+2.对象模式
+
+```ts
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
+const toPage = () => {
+  router.push({
+    path: '/reg'
+  })
+}
+```
+
+3.命名式路由模式
+
+```ts
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
+const toPage = () => {
+  router.push({
+    name: 'Reg' // 需要每个路由里配置name
+  })
+}
+```
+
+
+
+## 3. 历史记录replace
+
+采用replace进行页面的跳转会同样也会创建渲染新的Vue组件，但是在history中其不会重复保存记录，而是替换原有的vue组件；
+
+
+
+**router-link 使用方法：**
+
+```html
+   <router-link replace to="/">Login</router-link>
+   <router-link replace style="margin-left:10px" to="/reg">Reg</router-link>
+```
+
+
+
+**编程式导航：**
+
+```html
+  <button @click="toPage('/')">Login</button>
+  <button @click="toPage('/reg')">Reg</button>
+```
+
+```ts
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
+const toPage = (url: string) => {
+  router.replace(url)
+}
+
+```
+
+
+
+**横跨历史：**
+该方法采用一个整数作为参数，表示在历史堆栈中前进或后退多少步
+
+```html
+ <button @click="next">前进</button>
+ <button @click="prev">后退</button>
+```
+
+```ts
+const next = () => {
+  //前进 数量不限于1
+  router.go(1)
+}
+const prev = () => {
+  //后退
+  router.back()
+}
+```
+
+
+
+## 4. 路由传参
+
+
+
+### 4.1 Query路由传参
+
+编程式导航 使用router push 或者 replace 的时候 改为对象形式新增query 必须传入一个对象
+
+```ts
+const toDetail = (item: Item) => {
+    router.push({
+        path: '/reg',
+        query: item
+    })
+}
+```
+
+**接受参数：**
+
+使用 useRoute 的 query
+
+```vue
+<div>品牌：{{ route.query?.name }}</div>
+<div>价格：{{ route.query?.price }}</div>
+<div>ID：{{ route.query?.id }}</div>
+
+import { useRoute } from 'vue-router';
+const route = useRoute()
+```
+
+
+
+### 4.2 Params路由传参
+
+不可以使用path，必须使用name。页面刷新会丢失
+
+```ts
+const toDetail = (item: Item) => {
+    router.push({
+        name: 'Reg',
+        params: item
+    })
+}
+```
+
+**接受参数：**
+
+使用 useRoute 的 params
+
+```vue
+<div>品牌：{{ route.params?.name }}</div>
+<div>价格：{{ route.params?.price }}</div>
+<div>ID：{{ route.params?.id }}</div>
+
+import { useRoute } from 'vue-router';
+const route = useRoute()
+```
+
+
+
+### 4.3 动态路由传参
+
+很多时候，我们需要将给定匹配模式的路由映射到同一个组件。例如，我们可能有一个 User 组件，它应该对所有用户进行渲染，但用户 ID 不同。在 Vue Router 中，我们可以在路径中使用一个动态字段来实现，我们称之为 路径参数 
+
+路径参数 用冒号 : 表示。当一个路由被匹配时，它的 params 的值将在每个组件
+
+```ts
+const routes:Array<RouteRecordRaw> = [
+    {
+        path:"/",
+        name:"Login",
+        component:()=> import('../components/login.vue')
+    },
+    {
+        //动态路由参数
+        path:"/reg/:id",
+        name:"Reg",
+        component:()=> import('../components/reg.vue')
+    }
+]
+```
+
+
+
+```ts
+const toDetail = (item: Item) => {
+    router.push({
+        name: 'Reg',
+        params: {
+            id: item.id
+        }
+    })
+}
+```
+
+
+
+```ts
+import { useRoute } from 'vue-router';
+import { data } from './list.json'
+const route = useRoute()
+
+
+const item = data.find(v => v.id === Number(route.params.id))
+```
+
+
+
+
+
+## 5. 嵌套路由
+
+一些应用程序的 UI 由多层嵌套的组件组成。在这种情况下，URL 的片段通常对应于特定的嵌套组件结构，例如：
+
+```ts
+const routes: Array<RouteRecordRaw> = [
+    {
+        path: "/user",
+        component: () => import('../components/footer.vue'),
+        children: [
+            {
+                path: "",
+                name: "Login",
+                component: () => import('../components/login.vue')
+            },
+            {
+                path: "reg",
+                name: "Reg",
+                component: () => import('../components/reg.vue')
+            }
+        ]
+    },
+
+]
+```
+
+如你所见，children 配置只是另一个路由数组，就像 routes 本身一样。因此，你可以根据自己的需要，不断地嵌套视图
+
+> TIPS：不要忘记写router-view
+>
+
+```vue
+<div>
+    <router-view></router-view>
+    <div>
+        <router-link to="/">login</router-link>
+        <router-link style="margin-left:10px;" to="/user/reg">reg</router-link>
+    </div>
+</div>
+```
+
+
+## 6. 命名视图
+
+命名视图可以在同一级（同一个组件）中展示更多的路由视图，而不是嵌套显示。 命名视图可以让一个组件中具有多个路由渲染出口，这对于一些特定的布局组件非常有用。 命名视图的概念非常类似于“具名插槽”，并且视图的默认名称也是 default。
+
+一个视图使用一个组件渲染，因此对于同个路由，多个视图就需要多个组件。确保正确使用 components 配置 (带上 s)
+
+```ts
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+
+
+const routes: Array<RouteRecordRaw> = [
+    {
+        path: "/",
+        components: {
+            default: () => import('../components/layout/menu.vue'),
+            header: () => import('../components/layout/header.vue'),
+            content: () => import('../components/layout/content.vue'),
+        }
+    },
+]
+
+const router = createRouter({
+    history: createWebHistory(),
+    routes
+})
+export default router
+```
+
+
+对应Router-view 通过name 对应组件
+
+```vue
+<div>
+    <router-view></router-view>
+    <router-view name="header"></router-view>
+    <router-view name="content"></router-view>
+</div>
+```
+
+
+## 7. 重定向/别名
+
+重定向 redirect
+1. 字符串形式配置，访问/ 重定向到 /user （地址栏显示/,内容为/user路由的内容）
+
+```ts
+const routes: Array<RouteRecordRaw> = [
+    {
+        path:'/',
+        component:()=> import('../components/root.vue'),
+        redirect:'/user1',
+        children:[
+            {
+                path:'/user1',
+                components:{
+                    default:()=> import('../components/A.vue')
+                }
+            },
+            {
+                path:'/user2',
+                components:{
+                    bbb:()=> import('../components/B.vue'),
+                    ccc:()=> import('../components/C.vue')
+                }
+            }
+        ]
+    }
+]
+```
+
+ 2.对象形式配置
+
+```ts
+const routes: Array<RouteRecordRaw> = [
+    {
+        path: '/',
+        component: () => import('../components/root.vue'),
+        redirect: { path: '/user1' },
+        children: [
+            {
+                path: '/user1',
+                components: {
+                    default: () => import('../components/A.vue')
+                }
+            },
+            {
+                path: '/user2',
+                components: {
+                    bbb: () => import('../components/B.vue'),
+                    ccc: () => import('../components/C.vue')
+                }
+            }
+        ]
+    }
+]
+```
+
+3.函数模式（可以传参）
+
+```ts
+const routes: Array<RouteRecordRaw> = [
+    {
+        path: '/',
+        component: () => import('../components/root.vue'),
+        redirect: (to) => {
+            return {
+                path: '/user1',
+                query: to.query
+            }
+        },
+        children: [
+            {
+                path: '/user1',
+                components: {
+                    default: () => import('../components/A.vue')
+                }
+            },
+            {
+                path: '/user2',
+                components: {
+                    bbb: () => import('../components/B.vue'),
+                    ccc: () => import('../components/C.vue')
+                }
+            }
+        ]
+    }
+]
+```
+
+
+
+**别名 alias：**
+将 / 别名为 /root，意味着当用户访问 /root时，仍然跳转/
+
+```ts
+const routes: Array<RouteRecordRaw> = [
+    {
+        path: '/',
+        component: () => import('../components/root.vue'),
+        alias:["/root","/root2","/root3"],
+        children: [
+            {
+                path: 'user1',
+                components: {
+                    default: () => import('../components/A.vue')
+                }
+            },
+            {
+                path: 'user2',
+                components: {
+                    bbb: () => import('../components/B.vue'),
+                    ccc: () => import('../components/C.vue')
+                }
+            }
+        ]
+    }
+]
+```
+
+
+
+## 8. 路由守卫
+
+### 8.1 全局前置守卫
+
+router.beforeEach
+
+```ts
+router.beforeEach((to, form, next) => {
+    console.log(to, form);
+    next()
+})
+```
+
+每个守卫方法接收三个参数：
+
+- to: Route， 即将要进入的目标 路由对象；
+
+- from: Route，当前导航正要离开的路由；
+- next(): 进行管道中的下一个钩子。如果全部钩子执行完了，则导航的状态就是 confirmed (确认的)。
+- next(false): 中断当前的导航。如果浏览器的 URL 改变了 (可能是用户手动或者浏览器后退按钮)，那么 URL 地址会重置到 from 路由对应的地址。
+- next('/') 或者 next({ path: '/' }): 跳转到一个不同的地址。当前的导航被中断，然后进行一个新的导航。
+
+
+
+**案例：权限判断**
+
+```ts
+const whileList = ['/']
+
+router.beforeEach((to, from, next) => {
+    let token = localStorage.getItem('token')
+    //白名单 有值 或者登陆过存储了token信息可以跳转 否则就去登录页面
+    if (whileList.includes(to.path) || token) {
+        next()
+    } else {
+        next({
+            path:'/'
+        })
+    }
+})
+```
+
+
+
+### 8.2 全局后置守卫
+
+使用场景一般可以用来做loadingBar
+
+你也可以注册全局后置钩子，然而和守卫不同的是，这些钩子不会接受 next 函数也不会改变导航本身：
+
+```ts
+router.afterEach((to,from)=>{
+    Vnode.component?.exposed?.endLoading()
+})
+```
+
+
+
+loadingBar 组件
+
+```vue
+<template>
+    <div class="wraps">
+        <div ref="bar" class="bar"></div>
+    </div>
+</template>
+
+
+<script setup lang='ts'>
+import { ref, onMounted } from 'vue'
+let speed = ref<number>(1)
+let bar = ref<HTMLElement>()
+let timer = ref<number>(0)
+const startLoading = () => {
+    let dom = bar.value as HTMLElement;
+    speed.value = 1
+    timer.value = window.requestAnimationFrame(function fn() {
+        if (speed.value < 90) {
+            speed.value += 1;
+            dom.style.width = speed.value + '%'
+            timer.value = window.requestAnimationFrame(fn)
+        } else {
+            speed.value = 1;
+            window.cancelAnimationFrame(timer.value)
+        }
+    })
+
+
+}
+
+const endLoading = () => {
+    let dom = bar.value as HTMLElement;
+    setTimeout(() => {
+        window.requestAnimationFrame(() => {
+            speed.value = 100;
+            dom.style.width = speed.value + '%'
+        })
+    }, 500)
+
+}
+
+
+defineExpose({
+    startLoading,
+    endLoading
+})
+</script>
+    
+
+<style scoped lang="less">
+.wraps {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 2px;
+    .bar {
+        height: inherit;
+        width: 0;
+        background: blue;
+    }
+}
+</style>
+
+
+```
+
+mian.ts
+
+```ts
+import loadingBar from './components/loadingBar.vue'
+const Vnode = createVNode(loadingBar)
+render(Vnode, document.body)
+console.log(Vnode);
+
+router.beforeEach((to, from, next) => {
+    Vnode.component?.exposed?.startLoading()
+})
+
+router.afterEach((to, from) => {
+    Vnode.component?.exposed?.endLoading()
+})
+```
+
+
+
+## 9. 路由元信息
+
+通过路由记录的 meta 属性可以定义路由的元信息。使用路由元信息可以在路由中附加自定义的数据，例如：
+
+- 权限校验标识。
+
+- 路由组件的过渡名称。
+- 路由组件持久化缓存 (keep-alive) 的相关配置。
+- 标题名称
+
+我们可以在导航守卫或者是路由对象中访问路由的元信息数据。
+
+```ts
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      component: () => import('@/views/Login.vue'),
+      meta: {
+        title: "登录"
+      }
+    },
+    {
+      path: '/index',
+      component: () => import('@/views/Index.vue'),
+      meta: {
+        title: "首页",
+      }
+    }
+  ]
+})
+```
+
+使用TS扩展
+如果不使用扩展 将会是unknow 类型
+
+```ts
+declare module 'vue-router' {
+  interface RouteMeta {
+    title?: string
+  }
+}
+```
+
+
+
+
+
+## 10. 过渡动效
+
+想要在你的路径组件上使用转场，并对导航进行动画处理，你需要使用 v-slot API：
+
+```vue
+<router-view #default="{route,Component}">
+    <transition  :enter-active-class="`animate__animated ${route.meta.transition}`">
+        <component :is="Component"></component>
+    </transition>
+</router-view>
+```
+上面的用法会对所有的路由使用相同的过渡。如果你想让每个路由的组件有不同的过渡，你可以将元信息和动态的 name 结合在一起，放在<transition> 上： 
+
+```ts
+declare module 'vue-router'{
+     interface RouteMeta {
+        title:string,
+        transition:string,
+     }
+}
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      component: () => import('@/views/Login.vue'),
+      meta:{
+         title:"登录页面",
+         transition:"animate__fadeInUp",
+      }
+    },
+  ]
+})
+```
+
+
+
+
+
+
+
+## 11. 滚动行为
+
+使用前端路由，当切换到新路由时，想要页面滚到顶部，或者是保持原先的滚动位置，就像重新加载页面那样。vue-router 可以自定义路由切换时页面如何滚动。
+
+当创建一个 Router 实例，你可以提供一个 scrollBehavior 方法
+
+```ts
+const router = createRouter({
+  history: createWebHistory(),
+  scrollBehavior: (to, from, savePosition) => {
+    console.log(to, '==============>', savePosition);
+    return new Promise((r) => {
+      setTimeout(() => {
+        r({
+          top: 10000
+        })
+      }, 2000);
+    })
+  },
+```
+
+scrollBehavior 方法接收 to 和 from 路由对象。第三个参数 savedPosition 当且仅当 popstate 导航 (通过浏览器的 前进/后退 按钮触发) 时才可用。
+
+scrollBehavior 返回滚动位置的对象信息，长这样：{ left: number, top: number }
+
+```ts
+const router = createRouter({
+  history: createWebHistory(),
+  scrollBehavior: (to, from, savePosition) => {
+    return {
+       top:200
+    }
+  },
+
+```
+
+
+
+## 12. 动态路由
+
+我们一般使用动态路由都是后台会返回一个路由表前端通过调接口拿到后处理(后端处理路由)
+
+主要使用的方法就是router.addRoute
+
+
+
+**添加路由：**
+ 动态路由主要通过两个函数实现。`router.addRoute()` 和 `router.removeRoute()`。它们只注册一个新的路由，也就是说，如果新增加的路由与当前位置相匹配，就需要你用 `router.push()` 或 `router.replace() `来手动导航，才能显示该新路由
+
+```ts
+router.addRoute({ path: '/about', component: About })
+```
+
+从后台获取后，使用`forEach`添加路由
+
+
+
+**删除路由：**
+有几个不同的方法来删除现有的路由：
+
+- 通过添加一个名称冲突的路由。如果添加与现有途径名称相同的途径，会先删除路由，再添加路由：
+
+```ts
+router.addRoute({ path: '/about', name: 'about', component: About })
+
+// 这将会删除之前已经添加的路由，因为他们具有相同的名字且名字必须是唯一的
+router.addRoute({ path: '/other', name: 'about', component: Other })
+```
+
+- 通过调用 router.addRoute() 返回的回调：
+
+```ts
+const removeRoute = router.addRoute(routeRecord)
+removeRoute() // 删除路由如果存在的话
+```
+
+当路由没有名称时，这很有用。
+
+- 通过使用 router.removeRoute() 按名称删除路由：
+
+```
+router.addRoute({ path: '/about', name: 'about', component: About })
+// 删除路由
+router.removeRoute('about')
+```
+
+需要注意的是，如果你想使用这个功能，但又想避免名字的冲突，可以在路由中使用 Symbol 作为名字。
+当路由被删除时，所有的别名和子路由也会被同时删除
+
+
+
+**查看现有路由：**
+Vue Router 提供了两个功能来查看现有的路由：
+
+router.hasRoute()：检查路由是否存在。
+router.getRoutes()：获取一个包含所有路由记录的数组。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 六、其他
 
 ## 1.全局API的转移
@@ -1631,21 +2622,9 @@ import 'animate.css'
 
 
 
-## 2. css绑定setup
 
 
-
-```js
-const color=ref('pink')
-
-.box{
-	color:v-bind(color)
-}
-```
-
-
-
-## 3. 自动引包插件
+## 2. 自动引包插件
 
 ```shell
 npm i unplugin-auto-import
@@ -1662,5 +2641,358 @@ plugins: [
       imports: ['vue'],
       dts: 'src/auto-import.d.ts'
 })],
+```
+
+
+
+
+
+## 3. 全局函数和变量
+
+
+
+main.ts
+
+```ts
+const app = createApp(App)
+
+// 扩充类型防止报错
+type Filter = {
+  format<T>(str: T): string
+}
+
+declare module 'vue' {
+  export interface ComponentCustomProperties {
+    $filters: Filter
+  }
+}
+
+app.config.globalProperties.$env = 'dev'
+// 全局过滤器
+app.config.globalProperties.$filters = {
+  format<T>(str: T) {
+    return 'yrcx' + str
+  },
+}
+```
+
+
+
+组件中使用：
+
+```html
+<template>
+  <div>{{ $env }}</div>
+  <div>{{ $filters.format('123') }}</div>
+</template>
+<script setup lang="ts">
+import { getCurrentInstance } from 'vue'
+const app = getCurrentInstance() // 获取组件实例
+
+console.log(app?.proxy.$env)
+</script>
+```
+
+
+
+## 4. css
+
+
+
+**插槽选择器：**
+
+A组件引入了B组件并向B组件插槽传了一个div，B组件设置div样式发现没有生效，此时可设置插槽选择器
+
+```html
+<style scoped>
+ :slotted(.a) {
+    color:red
+}
+</style>
+```
+
+
+
+**全局选择器：**
+
+```html
+<style lang="less" scoped>
+:global(div){
+    color:red
+}
+</style>
+```
+
+
+
+**动态css：**
+
+```ts
+const color=ref('pink')
+
+.box{
+	color:v-bind(color)
+}
+
+对象形式：
+const color=ref({
+    color:'red'
+}'pink')
+
+settimeout(()=>{
+    style.value.color='blue'
+},1000)
+
+.box{
+	color:v-bind('style.color')
+}
+```
+
+
+
+
+
+## 5. Tailwind CSS
+
+只需书写 HTML 代码，无需书写 CSS，即可快速构建美观的网站。
+
+初始化项目：
+
+```shell
+npm init vue@latest
+```
+
+安装 Tailwind 以及其它依赖项：
+
+```shell
+npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
+```
+
+生成配置文件：
+
+```shell
+npx tailwindcss init -p
+```
+
+[配置 - Tailwind CSS 中文文档](https://www.tailwindcss.cn/docs/configuration)
+
+
+
+修改配置文件 tailwind.config.js：
+
+2.6版本 
+
+```js
+module.exports = {
+  purge: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+```
+
+3.0版本
+
+```js
+module.exports = {
+  content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+```
+
+创建一个index.css
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+ 在main.ts 引入
+
+```js
+import 'index.css'
+```
+
+
+
+
+
+## 6. 本地开启服务
+
+```shell
+npm i http-server -g
+```
+
+进入目录后
+
+```shell
+hs -p 3000
+```
+
+
+
+## 7. 环境变量
+
+项目根目录分别添加开发、生产和测试环境的文件!
+
+```
+.env.development
+.env.production
+.env.test
+```
+
+**文件内容：**
+
+```
+# 变量必须以 VITE_ 为前缀才能暴露给外部读取
+VITE_APP_TITLE = '甄选运营平台'
+```
+
+配置运行命令：package.json
+
+```json
+ "scripts": {
+    "dev": "vite --open",
+    "build:test": "vue-tsc && vite build --mode test",
+    "build:pro": "vue-tsc && vite build --mode production",
+    "preview": "vite preview"
+  },CopyErrorCopied
+```
+
+通过`import.meta.env`获取环境变量
+
+
+
+## 8. 性能优化
+
+配置后可以分析打包后代码体积
+
+```
+npm i rollup-plugin-visualize
+```
+
+vite.config.ts
+
+```ts
+import visualizer from 'rollup-plugin-visualizer'
+
+plugins:[visualizer({open:true})]
+```
+
+
+
+**简单的vite优化**：vite.config.ts
+
+```ts
+build: {
+    chunkSizeWarningLimit: 2000, // 超过2000再提示
+    cssCodeSplit: true, // 拆分css
+    sourcemap: false, //生产环境不需要了
+    minify: 'esbuild', // 是否禁用最小化混淆：esbuild打包速度快，terser体积最小
+    assetsInlineLimit: 4000, //图片小于4000编译成base64
+  },
+```
+
+
+
+**PWA离线存储技术：**
+
+PWA 技术的出现就是让web网页无限接近于Native 应用
+
+1. 可以添加到主屏幕，利用manifest实现
+2. 可以实现离线缓存，利用service worker实现
+3. 可以发送通知，利用service worker实现
+
+```shell
+npm i vite-plugin-pwa
+```
+
+```ts
+import {VitePWA} from 'vite-plugin-pwa'
+plugins:[VitePWA({
+      workbox:{
+          cacheId:"XIaoman",//缓存名称
+          runtimeCaching:[
+            {
+              urlPattern:/.*\.js.*/, //缓存文件
+              handler:"StaleWhileRevalidate", //重新验证时失效
+              options:{
+                cacheName:"XiaoMan-js", //缓存js，名称
+                expiration:{
+                  maxEntries:30, //缓存文件数量 LRU算法
+                  maxAgeSeconds:30 * 24 * 60 * 60 //缓存有效期
+ 
+                }
+              }
+            }
+          ]
+      },
+    })]
+```
+
+
+
+**图片懒加载：**
+
+```html
+import lazyPlugin from 'vue3-lazy'
+
+<img v-lazy="user.avatar" >
+```
+
+
+
+## 9. 跨域
+
+proxy配置跨域值适用于dev环境，上线后此配置不生效
+
+```ts
+server: {
+    proxy: {
+        ['/api']: {
+            target: 'http://www.abc.com:3000', // 服务器地址
+            changeOrigin: true, // 是否跨域
+            rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+},
+```
+
+请求：
+
+```ts
+fetch('/api/user')
+```
+
+
+
+## 10. 页面跳转进度条
+
+```shell
+npm i nprogress
+```
+
+```ts
+import nprogress from 'nprogress'
+import 'nprogress/nprogress.css'
+
+//通过将加载微调器设置为 false 来关闭加载微调器。（默认值：true)
+nprogress.configure({ showSpinner: false });
+
+
+ // 全局前置守卫
+router.beforeEach((to, from, next) => {
+    nprogress.start()
+
+})
+
+// 全局后置守卫
+router.afterEach((to, from, _next) => {
+    nprogress.done()
+})
 ```
 
